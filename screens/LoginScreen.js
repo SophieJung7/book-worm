@@ -1,7 +1,14 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
+import 'firebase/database';
 import colors from '../assets/colors';
 import CustomActionButton from '../components/CustomActionButton';
 
@@ -12,10 +19,36 @@ class LoginScreen extends Component {
     isLoading: false,
   };
 
-  onSignIn = () => {};
+  onSignIn = async () => {
+    if (this.state.email && this.state.password) {
+      this.setState({ isLoading: true });
+      try {
+        const response = await firebase
+          .auth()
+          .signInWithEmailAndPassword(this.state.email, this.state.password);
+        if (response) {
+          this.setState({ isLoading: false });
+          //   Navigate the user to homepage
+          this.props.navigation.navigate('LoadingScreen');
+        }
+      } catch (err) {
+        this.setState({ isLoading: false });
+        switch (error.code) {
+          case 'auth/user-not-found':
+            alert('A user with that email does not exist. Try signing up.');
+            break;
+          case 'auth/invalid-email':
+            alert('Please enter an email address.');
+        }
+      }
+    } else {
+      alert('Please enter email and password.');
+    }
+  };
 
   onSignUp = async () => {
     if (this.state.email && this.state.password) {
+      this.setState({ isLoading: true });
       try {
         const response = await firebase
           .auth()
@@ -23,8 +56,21 @@ class LoginScreen extends Component {
             this.state.email,
             this.state.password
           );
+        if (response) {
+          this.setState({ isLoading: false });
+          //   Sign In User (Below code is for saving user without Cloud Function)
+          //   const user = await firebase
+          //     .database()
+          //     .ref('/users')
+          //     .child(response.user.uid)
+          //     .set({ email: response.user.email, uid: response.user.uid });
+
+          this.onSignIn(this.state.email, this.state.password);
+        }
       } catch (err) {
-        if (error.code === 'auth/email-already-in-use') {
+        console.log(err);
+        this.setState({ isLoading: false });
+        if (err.code === 'auth/email-already-in-use') {
           alert('User already exists. Try Log in.');
         } else {
           console.log(err);
@@ -38,6 +84,21 @@ class LoginScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
+        {this.state.isLoading ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                elevation: 1000,
+              },
+            ]}
+          >
+            <ActivityIndicator size='large' color={colors.logoColor} />
+          </View>
+        ) : null}
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <TextInput
             style={styles.textInput}
