@@ -15,9 +15,13 @@ import { connect } from 'react-redux';
 import Swipeout from 'react-native-swipeout';
 import { Ionicons } from '@expo/vector-icons';
 import * as firebase from 'firebase/app';
+import 'firebase/storage';
 import * as Animatable from 'react-native-animatable';
+import { compose } from 'redux';
+import { connectActionSheet } from '@expo/react-native-action-sheet';
 
 import { snapshotToArray } from '../helpers/firebaseHelpers';
+import * as ImageHelpers from '../helpers/imageHelpers';
 import CustomActionButton from '../components/CustomActionButton';
 import ListItem from '../components/ListItem';
 import ListEmptyComponent from '../components/ListEmptyComponent';
@@ -28,9 +32,6 @@ class HomeScreen extends React.Component {
   constructor() {
     super();
     this.state = {
-      // totalCount: 0,
-      // readingCount: 0,
-      // readCount: 0,
       isAddNewBookVisible: false,
       books: [],
       booksReading: [],
@@ -176,6 +177,78 @@ class HomeScreen extends React.Component {
       this.props.toggleIsLoadingBooks(false);
     }
   };
+
+  uploadImage = async (image, selectedBook) => {
+    const ref = firebase
+      .storage()
+      .ref('books')
+      .child(this.state.currentUser.uid)
+      .child(selectedBook.key);
+    try {
+      // Convert URI to Blob
+      const blob = await ImageHelpers.prepareBlob(image.uri);
+      // Upload to Firebase Storage
+      const snapshot = await ref.put(blob);
+      // Get the URL to the Storage
+      let downloadURL = await ref.getDownloadURL();
+      // Save the URL to Firebse DB
+      await firebase
+        .database()
+        .ref('books')
+        .child(this.state.currentUser.uid)
+        .child(selectedBook.key)
+        .update({ image: downloadURL });
+
+      blob.close();
+      return downloadURL;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  openImageLibrary = async (selectedBook) => {
+    const result = await ImageHelpers.openImageLibrary();
+
+    if (result) {
+      this.props.toggleIsLoadingBooks(true);
+      const downloadURL = await this.uploadImage(result, selectedBook);
+      this.props.updateBookImage({ ...selectedBook, uri: downloadURL });
+      this.props.toggleIsLoadingBooks(false);
+    }
+  };
+
+  openCamera = async (selectedBook) => {
+    const result = await ImageHelpers.openCamera();
+
+    if (result) {
+      this.props.toggleIsLoadingBooks(true);
+      const downloadURL = await this.uploadImage(result, selectedBook);
+      this.props.updateBookImage({ ...selectedBook, uri: downloadURL });
+      this.props.toggleIsLoadingBooks(false);
+    }
+  };
+
+  addBookImage = (selectedBook) => {
+    const options = ['Select from Photos', 'Camera', 'Cancel'];
+    const cancelButtonIndex = 2;
+
+    this.props.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        // Do something here depending on the button index selected
+        if (buttonIndex == 0) {
+          this.openImageLibrary(selectedBook);
+        }
+        if (buttonIndex == 1) {
+          this.openCamera(selectedBook);
+        }
+      }
+    );
+  };
+
   renderItem = (item, index) => {
     let swipeoutButtons = [
       {
@@ -302,12 +375,6 @@ class HomeScreen extends React.Component {
             </CustomActionButton>
           </Animatable.View>
         </View>
-
-        {/* <View style={styles.footer}>
-          <BookCount count={this.state.books.length} title="Total Books" />
-          <BookCount count={this.state.booksReading.length} title="Reading" />
-          <BookCount count={this.state.booksRead.length} title="Read" />
-        </View> */}
         <SafeAreaView />
       </View>
     );
@@ -332,10 +399,17 @@ const mapDispatchToProps = (dispatch) => {
     markBookAsUnread: (book) =>
       dispatch({ type: 'MARK_BOOK_AS_UNREAD', payload: book }),
     deleteBook: (book) => dispatch({ type: 'DELETE_BOOK', payload: book }),
+    updateBookImage: (book) =>
+      dispatch({ type: 'UPDATE_BOOK_IMAGE', payload: book }),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
+const wrapper = compose(
+  connect(mapStateToProps, mapDispatchToProps),
+  connectActionSheet
+);
+
+export default wrapper(HomeScreen);
 
 const styles = StyleSheet.create({
   container: {

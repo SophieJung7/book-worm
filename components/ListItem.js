@@ -1,12 +1,39 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import NetworkImage from 'react-native-image-progress';
+import ProgressPie from 'react-native-progress/Pie';
+import { Surface, Shape } from '@react-native-community/art';
 import colors from '../assets/colors';
 
-const ListItem = ({ item, children, marginVertical }) => {
+const ListItem = ({ item, children, marginVertical, editable, onPress }) => {
   return (
     <View style={[styles.listItemContainer, { marginVertical }]}>
       <View style={styles.imageContainer}>
-        <Image source={require('../assets/icon.png')} style={styles.image} />
+        <TouchableOpacity
+          disabled={!editable}
+          style={{ flex: 1 }}
+          onPress={() => onPress(item)}
+        >
+          {item.image ? (
+            <NetworkImage
+              source={{ uri: item.image }}
+              style={styles.image}
+              indicator={ProgressPie}
+              indicatorProps={{
+                size: 40,
+                borderWidth: 0,
+                color: colors.logoColor,
+                unfilledColor: 'rgba(200,200,200,0.2)',
+              }}
+              imageStyle={{ borderRadius: 35 }}
+            />
+          ) : (
+            <Image
+              source={require('../assets/icon.png')}
+              style={styles.image}
+            />
+          )}
+        </TouchableOpacity>
       </View>
       <View style={styles.listItemTitleContainer}>
         <Text style={styles.listItemTitle}>{item.name}</Text>
@@ -18,6 +45,7 @@ const ListItem = ({ item, children, marginVertical }) => {
 
 ListItem.defaultProps = {
   marginVertical: 5,
+  editable: false,
 };
 
 const styles = StyleSheet.create({

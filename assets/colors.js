@@ -3,7 +3,7 @@ const colors = {
   bgSuccessDark: '#3C6E47DA',
   bgError: '#deada5',
   bgPrimary: '#AAD1E6',
-  bgMain: '#2E424D',
+  bgMain: 'black',
   bgTextInput: '#ececec',
   bgTextInputDark: '#b6b6b6',
   bgColor: '#f7f2f2',
@@ -13,7 +13,7 @@ const colors = {
   borderColor: '#E9E9E9',
   logoColor: '#bada55',
   txtWhite: 'white',
-  listItemBg: '#354D58DA',
+  listItemBg: 'black',
 };
 
 export default colors;

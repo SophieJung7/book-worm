@@ -3,6 +3,7 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 import WelcomeScreen from './screens/AppSwitchNavigator/WelcomeScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -38,7 +39,9 @@ class App extends Component {
   render() {
     return (
       <Provider store={store}>
-        <AppContainer />
+        <ActionSheetProvider>
+          <AppContainer />
+        </ActionSheetProvider>
       </Provider>
     );
   }

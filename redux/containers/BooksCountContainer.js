@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { connect } from 'react-redux';
 import colors from '../../assets/colors';
 import PropTypes from 'prop-types';
+
 const BooksCountContainer = ({ color, type, ...props }) => (
   <View style={styles.container}>
     <Text style={{ color: 'white' }}>{props.books[type].length || 0}</Text>

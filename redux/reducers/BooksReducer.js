@@ -3,6 +3,7 @@ const initialState = {
   booksReading: [],
   booksRead: [],
   isLoadingBooks: true,
+  image: null,
 };
 
 const books = (state = initialState, action) => {
@@ -65,6 +66,28 @@ const books = (state = initialState, action) => {
         ),
       };
 
+    case 'UPDATE_BOOK_IMAGE':
+      return {
+        ...state,
+        books: state.books.map((book) => {
+          if (book.name == action.payload.name) {
+            return { ...book, image: action.payload.uri };
+          }
+          return book;
+        }),
+        booksReading: state.booksReading.map((book) => {
+          if (book.name == action.payload.name) {
+            return { ...book, image: action.payload.uri };
+          }
+          return book;
+        }),
+        booksRead: state.booksRead.map((book) => {
+          if (book.name == action.payload.name) {
+            return { ...book, image: action.payload.uri };
+          }
+          return book;
+        }),
+      };
     default:
       return state;
   }
